@@ -212,19 +212,6 @@ def main():
         dest='sleep',
         help=argparse.SUPPRESS,
         action='store_false')
-    parser_upload.add_argument('-c', '--cvss',
-        dest='cvss',
-        help='CVSS Score greater than or equal to this value will return a non-zero exit',
-        type=float,
-        default=11)
-    parser_upload.add_argument('-m', '--malware',
-        dest='malware',
-        help='if malware is discovered and this flag is set, a non-zero exit will occur',
-        action='store_true')
-    parser_upload.add_argument('-P', '--pups',
-        dest='pup',
-        help='if Potentially Unwanted Software is discovered and this flag is set, a non-zero exit will occur',
-        action='store_true')
     parser_upload.add_argument('--json',
         dest='json',
         help='returns the data as a JSON object instead of formatted text',
@@ -240,19 +227,6 @@ def main():
     parser_report.add_argument('-w', '--wait', 
         dest='sleep', 
         help='wait for testing of the image to complete', 
-        action='store_true')
-    parser_report.add_argument('-c', '--cvss',
-        dest='cvss',
-        help='CVSS Score greater than or equal to this value will return a non-zero exit',
-        type=float,
-        default=11)
-    parser_report.add_argument('-m', '--malware',
-        dest='malware',
-        help='if malware is discovered and this flag is set, a non-zero exit will occur',
-        action='store_true')
-    parser_report.add_argument('-P', '--pups',
-        dest='pup',
-        help='if Potentially Unwanted Software is discovered and this flag is set, a non-zero exit will occur',
         action='store_true')
     parser_report.add_argument('--json',
         dest='json',
@@ -292,7 +266,6 @@ def main():
     args = parser.parse_args()
     consec = ContainerSecurity(args.access, args.secret, uri=args.api, registry=args.registry)
     data = {}
-    retval = 0
 
     # If the action was to upload an image, we want to make sure to do that first.
     if args.action == 'upload':
@@ -408,47 +381,14 @@ def main():
         print '\n'.join(output)
 
     # Now we need to check to see if we need to return a exit code other than 0.
-    # While this is likely more complex than necessary, if someone wanted to be
-    # shwifty they could determine what classes of things caused the failure:
-    #
-    # - Policy Violation = 1
-    # - CVSS Threshold Violation = 2
-    # - Discovered Malware = 4
-    # - Potentially Unwanted Programs = 8
-    # 
-    # Also as the value of no 2 should collide, you could actually determine any
-    # combination of things that have failed.  For example 5 would equal malware
-    # and a policy violation. 6 would equal CVSS scores and Malware.
     if ('policy' in data 
       and data['policy']
       and 'status' in data['policy'] 
       and data['policy']['status'] != 'pass'):
         # If we see anything in the policy status other than "pass", we will
-        # increment the return value by 1
-        retval += 1
-    if 'report' in data and data['report']:
-        if 'findings' in data['report']:
-            # For each finding we find over the CVSS threshold, we will increment
-            # the return value by 1.  This way we can actually keep track of the
-            # number of CVSS violations discovered in the return code.
-            failed = False
-            for f in data['report']['findings']:
-                if float(f['nvdFinding']['cvss_score']) >= args.cvss:
-                    failed = True
-            if failed:
-                retval += 2
-        if (args.malware 
-          and 'malware' in data['report'] 
-          and len(data['report']['malware']) > 0):
-            # If any malware was discovered and the malware flag has been set,
-            # we will increment the return value by 1000.
-            retval += 4
-        if (args.pup
-          and 'potentially_unwanted_programs' in data['report'] 
-          and len(data['report']['potentially_unwanted_programs']) > 0):
-            retval += 8
-
-    sys.exit(retval)
+        # return a status code of 1
+        sys.exit(1)
+    sys.exit(0)
 
 
 if __name__ == '__main__':

@@ -28,17 +28,6 @@ CSUP is designed to be either run as a standalone tool, or to be embedded as par
 * **TIO_CS_ADDRESS** Tenable.io Container Security Address (_default is registry.cloud.tenable.com_)
 * **CS_API** Tenable.io Container Security API Path (_default is https://cloud.tenable.com/container-security/api/v1 _)
 
-### Status return code
-
-While this is likely more complex than necessary, if someone wanted to be shwifty they could determine what classes of things caused the failure:
-
-- Policy Violation = 1
-- CVSS Threshold Violation = 2
-- Discovered Malware = 4
-- Potentially Unwanted Programs = 8
-
-Also as the value of no 2 should collide, you could actually determine any combination of things that have failed.  For example 5 would equal malware and a policy violation. 6 would equal CVSS scores and Malware.
-
 ### Global Arguments
 
 ```
@@ -92,12 +81,6 @@ optional arguments:
                         ContainerSecurity image tag
   -r, --report          output the test results when tests have completed
   -p, --policy          output the compliance status when tests have completed
-  -c CVSS, --cvss CVSS  CVSS Score greater than or equal to this value will
-                        return a non-zero exit
-  -m, --malware         if malware is discovered and this flag is set, a non-
-                        zero exit will occur
-  -P, --pups            if Potentially Unwanted Software is discovered and
-                        this flag is set, a non-zero exit will occur
   --json                returns the data as a JSON object instead of formatted
                         text
 ```
@@ -119,12 +102,6 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -w, --wait            wait for testing of the image to complete
-  -c CVSS, --cvss CVSS  CVSS Score greater than or equal to this value will
-                        return a non-zero exit
-  -m, --malware         if malware is discovered and this flag is set, a non-
-                        zero exit will occur
-  -P, --pups            if Potentially Unwanted Software is discovered and
-                        this flag is set, a non-zero exit will occur
   --json                returns the data as a JSON object instead of formatted
                         text
 ```
