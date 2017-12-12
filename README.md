@@ -8,7 +8,7 @@ usage: csup [GLOBAL OPTIONS] {upload,report,policy,status} [ACTION OPTIONS]
 
 ## Installing
 
-There are a few methods for installing the csup tool.  The first one is to simply download the [packaged binaries]() for both MacOS and Linux.  The second method is to install through pip, and is simply a matter of running `pip install csup`.  You could also manually download and install the package directly using `pip install .` from the resulting folder.
+There are a few methods for installing the csup tool.  The first one is to simply download the [packaged binaries](https://github.com/tenable/csup/releases) for both MacOS and Linux.  The second method is to install through pip, and is simply a matter of running `pip install csup`.  You could also manually download and install the package directly using `pip install .` from the resulting folder.
 
 ### Requirements
 
