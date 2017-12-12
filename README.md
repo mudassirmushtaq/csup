@@ -1,4 +1,4 @@
-# Container Security UPdate tool
+# Container Security UPloading & reporting tool
 
 CSUP is a commandline tool designed to interface into Tenable.io's Container Security toolset for the purposes of uploading docker containers, fetching the image reports, and checking the policy compliance and status of the image tests.
 
