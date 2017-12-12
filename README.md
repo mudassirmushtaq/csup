@@ -68,6 +68,8 @@ valid actions:
 
 ### Upload Action Arguments
 
+![](images/csup-upload.gif)
+
 ```
 usage: csup upload [-h] [-t TAG] [-N CONSEC_NAME] [-T CONSEC_TAG] [-r] [-p]
                    [-c CVSS] [-m] [-P] [--json]
@@ -103,6 +105,8 @@ optional arguments:
 
 ### Report Action Arguments
 
+![](images/csup-report.gif)
+
 ```
 usage: csup report [-h] [-w] [-c CVSS] [-m] [-P] [--json] id
 
@@ -127,6 +131,8 @@ optional arguments:
 
 ### Policy Action Arguments
 
+![](images/csup-policy.gif)
+
 ```
 usage: csup policy [-h] [-w] [--json] id
 
@@ -143,6 +149,8 @@ optional arguments:
 ```
 
 ### Status Action Arguments
+
+![](images/csup-status.gif)
 
 ```
 usage: csup status [-h] [--json] id
