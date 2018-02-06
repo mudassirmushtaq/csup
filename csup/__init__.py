@@ -2,10 +2,11 @@
 import docker, requests, os, sys, json, time, argparse
 from dateutil.parser import parse as dateparse
 from requests.packages.urllib3 import Retry
+from colorama import init, Fore, Back, Style
 
 
 __author__ = 'Steve McGrath <smcgrath@tenable.com>'
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 
 class APIError(Exception):
@@ -144,6 +145,16 @@ class ContainerSecurity(object):
         d.images.remove(repo)
         return image.id.split(':')[1][:12]
 
+    def list_images(self):
+        '''
+        Gets the list of known Images in container security
+        '''
+        return self._request('GET', 'container/list')
+
+
+def color(color, msg):
+    return '{}{}{}'.format(color, msg, Style.RESET_ALL)
+
 
 def main():
     '''
@@ -261,11 +272,20 @@ def main():
         help='returns the data as a JSON object instead of formatted text',
         action='store_true')
 
+    #parser_list = subparsers.add_parser('list', description='''
+    #Get the listing of images currently enumerated in Container Security
+    #''')
+    #parser_list.add_argument('--json',
+    #    dest='json',
+    #    help='returns the data as a JSON object instead of formatted text',
+    #    action='store_true')
+
     # process the arguments and instantiate the ContainerSecurity object and
     # data dictionary.
     args = parser.parse_args()
     consec = ContainerSecurity(args.access, args.secret, uri=args.api, registry=args.registry)
     data = {}
+    exit_code = 0
 
     # If the action was to upload an image, we want to make sure to do that first.
     if args.action == 'upload':
@@ -275,13 +295,17 @@ def main():
             'upload_time': int(time.time() - ustart)
         }
 
+    if args.action == 'list':
+        data['list'] = consec.list_images()
+
     # Now we want to make sure to use the appropriate image id.  If we have
     # uploaded an image, then we will want to use the returned image id form that
     # image, otherwise we want to use the image id that was provided as an argument
     if 'upload' in data and 'image_id' in data['upload']:
         image_id = data['upload']['image_id']
     else:
-        image_id = args.id
+        if hasattr(args, 'id'):
+            image_id = args.id
 
     # Run the report, policy, and status actions if required.
     if args.action == 'report' or (args.action == 'upload' and args.report):
@@ -305,15 +329,27 @@ def main():
             output.append('Uploaded Image: {}'.format(data['upload']['image_id']))
             output.append('Upload Time: {} seconds'.format(data['upload']['upload_time']))
 
+        if 'list' in data and data['list']:
+            for item in data['list']:
+                line = '{id} {name:30} {size} {score}'.format(
+                )
+                output.append(line)
+
         if 'status' in data and data['status']:
             # Output the status information about the image testing job(s).
             if data['status'] == 'not_found':
                 output.append('Could not find Image')
-            else:
-                line = 'Test Status: {}'.format(data['status']['job_status'].upper())
-                if data['status']['job_status'] == 'completed':
+                exit_code = 1
+            elif 'job_status' in data['status']:
+                col = Fore.YELLOW
+                if data['status'] == 'completed': col = Fore.GREEN
+                if data['status'] == 'failed': col = Fore.RED
+                line = 'Test Status: {}'.format(color(col, data['status']['job_status'].upper()))
+                if data['status']['job_status'] in ['completed', 'failed']:
                     duration = (dateparse(data['status']['updated_at']) - dateparse(data['status']['created_at'])).seconds
                     line += ' in {} seconds'.format(duration)
+                if data['status']['job_status'] == 'failed':
+                    exit_code = 1
                 output.append(line)
 
         if 'policy' in data and data['policy']:
@@ -321,8 +357,12 @@ def main():
             if 'error' in data['policy'] and data['policy']['error'] in ['image not found', 'Internal Server Error']:
                 # If we encountered an error, then we need to display the error and bail.
                 output.append('Could not perform policy action: {}'.format(r['error']))
+                exit_code = 1
             else:
-                output.append('Compliance Status: {}'.format(data['policy']['status'].upper()))
+                col = Fore.RED
+                if data['policy']['status'] == 'pass':
+                    col = Fore.GREEN
+                output.append('Compliance Status: {}'.format(color(col, data['policy']['status'].upper())))
 
         if 'report' in data and data['report']:
             # Output the report information about the image tested.
@@ -330,6 +370,7 @@ def main():
             if 'error' in r and r['error'] in ['image not found', 'Internal Server Error']:
                 # If we encountered an error, then we need to display the error and bail.
                 output.append('Could not perform report action: {}'.format(r['error']))
+                exit_code = 1
             else:
                 # some formatted output of most of the main fields (but not all)
                 output.append('Docker Image Id: {}'.format(r['docker_image_id']))
@@ -338,7 +379,7 @@ def main():
                 output.append('Operating System: {}'.format(r['os']))
                 output.append('OS Version: {}'.format(r['os_version']))
                 output.append('Architecture: {}'.format(r['os_architecture']))
-                output.append('Risk Score: {}'.format(r['risk_score']))
+                output.append('Risk Score: {}'.format(color(Fore.YELLOW, r['risk_score'])))
                 output.append('Image Created: {}'.format(r['created_at']))
                 output.append('Image Updated: {}'.format(r['updated_at']))
 
@@ -387,8 +428,8 @@ def main():
       and data['policy']['status'] != 'pass'):
         # If we see anything in the policy status other than "pass", we will
         # return a status code of 1
-        sys.exit(1)
-    sys.exit(0)
+        exit_code = 1
+    sys.exit(exit_code)
 
 
 if __name__ == '__main__':

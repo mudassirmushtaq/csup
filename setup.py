@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='csup',
-    version='0.0.2',
+    version='0.0.3',
     description='Container Security UPloading and reporting tool (CSUP)',
     long_description='Commandline tool to upload, check the status, and report on docker images in Tenable\'s Container Security product',
     author='Steven McGrath <smcgrath@tenable.com>',
@@ -24,6 +24,7 @@ setup(
         'python-dateutil>=2.6',
         'requests>=2.18',
         'docker>=2.6',
+        'colorama>=0.3',
     ],
     entry_points={
         'console_scripts': [
