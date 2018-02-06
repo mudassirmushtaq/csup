@@ -3,10 +3,13 @@ import docker, requests, os, sys, json, time, argparse
 from dateutil.parser import parse as dateparse
 from requests.packages.urllib3 import Retry
 from colorama import init, Fore, Back, Style
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 __author__ = 'Steve McGrath <smcgrath@tenable.com>'
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 
 
 class APIError(Exception):
@@ -342,8 +345,8 @@ def main():
                 exit_code = 1
             elif 'job_status' in data['status']:
                 col = Fore.YELLOW
-                if data['status'] == 'completed': col = Fore.GREEN
-                if data['status'] == 'failed': col = Fore.RED
+                if data['status']['job_status'] == 'completed': col = Fore.GREEN
+                if data['status']['job_status'] == 'failed': col = Fore.RED
                 line = 'Test Status: {}'.format(color(col, data['status']['job_status'].upper()))
                 if data['status']['job_status'] in ['completed', 'failed']:
                     duration = (dateparse(data['status']['updated_at']) - dateparse(data['status']['created_at'])).seconds
