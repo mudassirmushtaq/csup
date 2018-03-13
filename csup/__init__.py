@@ -3,13 +3,17 @@ import docker, requests, os, sys, json, time, argparse
 from dateutil.parser import parse as dateparse
 from requests.packages.urllib3 import Retry
 from colorama import init, Fore, Back, Style
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
+from requests.packages.urllib3.exceptions import (
+    InsecureRequestWarning, InsecurePlatformWarning, SNIMissingWarning)
 
+# These warning will always fire on older versions of python, we just want to
+# ignore them for now.
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-
+requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
+requests.packages.urllib3.disable_warnings(SNIMissingWarning)
 
 __author__ = 'Steve McGrath <smcgrath@tenable.com>'
-__version__ = '0.0.4'
+__version__ = '0.0.5'
 
 
 class APIError(Exception):
@@ -59,6 +63,21 @@ class ContainerSecurity(object):
     def _request(self, method, path, return_json=True, **kwargs):
         '''
         HTTP Request Function
+
+        Args:
+            method (str): The HTTP Method being used for the call, such as GET,
+                POST, PUT, DELETE
+            path (str): The URL path for the the API call.
+            return_json (optional, bool): Should the returned object be a Python
+                dictionary or should the raw HTTP response be returned.  Default
+                is True.
+            **kwargs (optional, dict): Any keywords that want to be passed back
+                to the Python requests object.
+
+        Returns:
+            dict: Python dictionary representing the JSON document returned from
+                the API.
+            requests.Response: The raw HTTP Response instance.
         '''
         resp = self._session.request(method, '{}/{}'.format(self._uri, path), **kwargs)
 
@@ -99,6 +118,12 @@ class ContainerSecurity(object):
     def status(self, image_id):
         '''
         Return the Image Test Status
+
+        Args:
+            image_id (str): The Docker short image id
+        
+        Returns:
+            dict: The image status document
         '''
         return self._request('GET', 'jobs/image_status', params={
             'image_id': image_id
