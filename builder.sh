@@ -13,7 +13,7 @@ pyinstaller                                       \
     --log-level=WARN                              \
     --clean                                       \
     --name csup.macos.x86_64                      \
-    csup/__init__.py
+    csup.py
 cleanup
 
 # Build the Linux Binary
@@ -24,5 +24,5 @@ docker run -v ${PWD}:/src six8/pyinstaller-alpine \
     --log-level=WARN                              \
     --clean                                       \
     --name csup.linux.x86_64                      \
-    csup/__init__.py
+    csup.py
 cleanup
