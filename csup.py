@@ -13,7 +13,7 @@ requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
 requests.packages.urllib3.disable_warnings(SNIMissingWarning)
 
 __author__ = 'Steve McGrath <smcgrath@tenable.com>'
-__version__ = '1.0'
+__version__ = '1.0.1'
 
 
 class APIError(Exception):
@@ -202,7 +202,7 @@ def sevcolor(score, colored=True):
         elif fscore >= 4.0: # Anything more than 4.0 is MEDIUM
             return color(Fore.YELLOW, score)
         else:               # Anything below 4.0 is LOW
-            return color(Fore.GREEEN, score)
+            return color(Fore.GREEN, score)
 
 def main():
     '''
