@@ -2,7 +2,7 @@
 import docker, requests, os, sys, json, time, argparse
 from dateutil.parser import parse as dateparse
 from requests.packages.urllib3 import Retry
-from colorama import init, Fore, Back, Style
+from colorama import init, deinit, Fore, Back, Style
 from requests.packages.urllib3.exceptions import (
     InsecureRequestWarning, InsecurePlatformWarning, SNIMissingWarning)
 
@@ -13,7 +13,7 @@ requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
 requests.packages.urllib3.disable_warnings(SNIMissingWarning)
 
 __author__ = 'Steve McGrath <smcgrath@tenable.com>'
-__version__ = '0.0.5'
+__version__ = '1.0'
 
 
 class APIError(Exception):
@@ -180,9 +180,29 @@ class ContainerSecurity(object):
         return self._request('GET', 'container/list')
 
 
-def color(color, msg):
-    return '{}{}{}'.format(color, msg, Style.RESET_ALL)
+def color(color, msg, colored=True):
+    if colored:
+        return '{}{}{}'.format(color, msg, Style.RESET_ALL)
+    else:
+        return msg
 
+
+def sevcolor(score, colored=True):
+    if not colored:
+        return score
+    try:
+        fscore = float(score)
+    except ValueError:
+        return score
+    else:
+        if fscore > 9.9:    # Anything more than 9.9 is CRITICAL
+            return color(Fore.MAGENTA, score)
+        elif fscore >= 7.0: # Anything more than 7.0 is HIGH
+            return color(Fore.RED, score)
+        elif fscore >= 4.0: # Anything more than 4.0 is MEDIUM
+            return color(Fore.YELLOW, score)
+        else:               # Anything below 4.0 is LOW
+            return color(Fore.GREEEN, score)
 
 def main():
     '''
@@ -255,6 +275,11 @@ def main():
         dest='json',
         help='returns the data as a JSON object instead of formatted text',
         action='store_true')
+    parser_upload.add_argument('--no-color',
+        dest='colored',
+        help='Remove colorization from the output',
+        action='store_false',
+        default=True)
 
     # Report Subparser options
     parser_report = subparsers.add_parser('report', description='''
@@ -271,6 +296,11 @@ def main():
         dest='json',
         help='returns the data as a JSON object instead of formatted text',
         action='store_true')
+    parser_report.add_argument('--no-color',
+        dest='colored',
+        help='Remove colorization from the output',
+        action='store_false',
+        default=True)
 
 
     # Policy Subparser options
@@ -288,6 +318,11 @@ def main():
         dest='json',
         help='returns the data as a JSON object instead of formatted text',
         action='store_true')
+    parser_policy.add_argument('--no-color',
+        dest='colored',
+        help='Remove colorization from the output',
+        action='store_false',
+        default=True)
 
     # Status subparser options
     parser_status = subparsers.add_parser('status', description='''
@@ -299,6 +334,11 @@ def main():
         dest='json',
         help='returns the data as a JSON object instead of formatted text',
         action='store_true')
+    parser_status.add_argument('--no-color',
+        dest='colored',
+        help='Remove colorization from the output',
+        action='store_false',
+        default=True)
 
     #parser_list = subparsers.add_parser('list', description='''
     #Get the listing of images currently enumerated in Container Security
@@ -372,7 +412,8 @@ def main():
                 col = Fore.YELLOW
                 if data['status']['job_status'] == 'completed': col = Fore.GREEN
                 if data['status']['job_status'] == 'failed': col = Fore.RED
-                line = 'Test Status: {}'.format(color(col, data['status']['job_status'].upper()))
+                line = 'Test Status: {}'.format(color(
+                    col, data['status']['job_status'].upper(), args.colored))
                 if data['status']['job_status'] in ['completed', 'failed']:
                     duration = (dateparse(data['status']['updated_at']) - dateparse(data['status']['created_at'])).seconds
                     line += ' in {} seconds'.format(duration)
@@ -390,7 +431,8 @@ def main():
                 col = Fore.RED
                 if data['policy']['status'] == 'pass':
                     col = Fore.GREEN
-                output.append('Compliance Status: {}'.format(color(col, data['policy']['status'].upper())))
+                output.append('Compliance Status: {}'.format(
+                    color(col, data['policy']['status'].upper(), args.colored)))
 
         if 'report' in data and data['report']:
             # Output the report information about the image tested.
@@ -407,7 +449,8 @@ def main():
                 output.append('Operating System: {}'.format(r['os']))
                 output.append('OS Version: {}'.format(r['os_version']))
                 output.append('Architecture: {}'.format(r['os_architecture']))
-                output.append('Risk Score: {}'.format(color(Fore.YELLOW, r['risk_score'])))
+                output.append('Risk Score: {}'.format(
+                    sevcolor(r['risk_score'], args.colored)))
                 output.append('Image Created: {}'.format(r['created_at']))
                 output.append('Image Updated: {}'.format(r['updated_at']))
 
@@ -427,7 +470,7 @@ def main():
                     output.append('Findings Discovered:')
                     for finding in r['findings']:
                         output.append('\t{} {} [{}]'.format(
-                            finding['nvdFinding']['cvss_score'], 
+                            sevcolor(finding['nvdFinding']['cvss_score'], args.colored), 
                             finding['nvdFinding']['cve'],
                             ', '.join(['{}={}'.format(p['name'], p['version']) for p in finding['packages']])
                         ))

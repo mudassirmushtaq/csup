@@ -83,6 +83,7 @@ optional arguments:
   -p, --policy          output the compliance status when tests have completed
   --json                returns the data as a JSON object instead of formatted
                         text
+  --no-color            Remove colorization from the output
 ```
 
 
@@ -104,6 +105,7 @@ optional arguments:
   -w, --wait            wait for testing of the image to complete
   --json                returns the data as a JSON object instead of formatted
                         text
+  --no-color            Remove colorization from the output
 ```
 
 ### Policy Action Arguments
@@ -123,6 +125,7 @@ optional arguments:
   -h, --help  show this help message and exit
   -w, --wait  wait for testing of the image to complete
   --json      returns the data as a JSON object instead of formatted text
+  --no-color            Remove colorization from the output
 ```
 
 ### Status Action Arguments
@@ -140,5 +143,6 @@ positional arguments:
 optional arguments:
   -h, --help  show this help message and exit
   --json      returns the data as a JSON object instead of formatted text
+  --no-color            Remove colorization from the output
 ```
 
