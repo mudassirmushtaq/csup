@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import docker, requests, os, sys, json, time, argparse
 from dateutil.parser import parse as dateparse
 from requests.packages.urllib3 import Retry
@@ -43,7 +44,7 @@ class ContainerSecurity(object):
             backoff_factor=0.1, 
             respect_retry_after_header=True
         )
-        adapter = requests.adapters.HTTPAdapter(retries)
+        adapter = requests.adapters.HTTPAdapter(max_retries=retries)
 
         # initiate the session and then attach the Retry adaptor.
         self._session = requests.Session()
@@ -387,7 +388,7 @@ def main():
     if args.json:
         # If the User requested that the output be in JSON format, then we should
         # simply return a JSON formatted reponse from the data disctionary
-        print json.dumps(data, sort_keys=True, indent=4)
+        print(json.dumps(data, sort_keys=True, indent=4))
     else:
         # Here we will attempt to interpret the output presented fromt he actions
         # above and present the data in a readable format for a commandline app.
@@ -490,7 +491,7 @@ def main():
                         output.append('\t- {}={}'.format(i['file'], i['sha256']))         
 
         # Output everything to STDOut.
-        print '\n'.join(output)
+        print('\n'.join(output))
 
     # Now we need to check to see if we need to return a exit code other than 0.
     if ('policy' in data 
